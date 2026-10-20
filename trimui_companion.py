@@ -382,12 +382,12 @@ class TrimUIApp(ctk.CTk):
         else:
             self._update_device_badge()
 
-    def _root(self) -> Path | None:
+    def _sd_root(self) -> Path | None:
         raw = self.sd_var.get().strip().strip('"')
         return Path(raw).expanduser() if raw else None
 
     def _update_device_badge(self):
-        root = self._root()
+        root = self._sd_root()
         if not root or not root.is_dir():
             self.device_label.configure(text="●  Карта не выбрана", text_color=C["yellow"])
             self.version_pill.configure(text="ВЫБЕРИ MICROSD", text_color=C["yellow"], fg_color="#352c1c")
@@ -456,7 +456,7 @@ class TrimUIApp(ctk.CTk):
         threading.Thread(target=run, daemon=True, name="TrimUI-Worker").start()
 
     def scan_async(self, silent: bool = False):
-        root = self._root()
+        root = self._sd_root()
         if not root or not root.is_dir():
             if not silent: mb.showwarning(APP_NAME, "Сначала выбери корень microSD — папку, внутри которой находится Roms.", parent=self)
             return
@@ -516,7 +516,7 @@ class TrimUIApp(ctk.CTk):
 
     # ───────────────────────────── Overview ─────────────────────────────
     def build_overview(self, parent):
-        root = self._root()
+        root = self._sd_root()
         scroll = ctk.CTkScrollableFrame(parent, fg_color="transparent", corner_radius=0)
         scroll.grid(row=0, column=0, sticky="nsew")
         hero = ctk.CTkFrame(scroll, fg_color="#122a3d", corner_radius=18, border_width=1, border_color="#1c3b54")
@@ -877,7 +877,7 @@ class TrimUIApp(ctk.CTk):
             "mix": ("Mix", ".media/mix/Игра.png", "Скомпонованное изображение"),
         }
         for i, kind in enumerate(ART_DIRS):
-            folder = Path(self._root() or ".") / (self.roms_var.get().strip() or "Roms") / platform / ".media" / ART_DIRS[kind]
+            folder = Path(self._sd_root() or ".") / (self.roms_var.get().strip() or "Roms") / platform / ".media" / ART_DIRS[kind]
             count = image_count(folder)
             title, path, desc = kind_desc[kind]
             tile = ctk.CTkFrame(assets, fg_color=C["panel2"], corner_radius=9)
@@ -1010,7 +1010,7 @@ class TrimUIApp(ctk.CTk):
                 preview_label.configure(image=None, text="NO IMAGE")
                 path_label.configure(text="Для этого типа изображения файл пока не найден.")
             dest = asset_destination(game, kind)
-            label = f"NX REDUX: {dest.relative_to(self._root()) if self._root() and self._root() in dest.parents else dest}"
+            label = f"NX REDUX: {dest.relative_to(self._sd_root()) if self._sd_root() and self._sd_root() in dest.parents else dest}"
             kind_hint.configure(text=label)
         update_preview()
         win.update_idletasks()
@@ -1047,7 +1047,7 @@ class TrimUIApp(ctk.CTk):
         titles = {"logo": "Логотип системы (logo.png)", "background": "Фон системы (bg.png)", "wallpaper": "Общий фон меню (bg.png в корне карты)"}
         source = fd.askopenfilename(parent=self, title=f"Выбери: {titles[kind]}", filetypes=[("Изображения", "*.png *.jpg *.jpeg *.webp *.bmp"), ("Все файлы", "*.*")])
         if not source: return
-        root = self._root()
+        root = self._sd_root()
         if not root:
             mb.showwarning(APP_NAME, "Сначала выбери корень microSD.", parent=self); return
         dest = system_asset_destination(root, self.roms_var.get().strip() or "Roms", platform, kind)
@@ -1110,7 +1110,7 @@ class TrimUIApp(ctk.CTk):
             self._save_cfg()
 
     def backup_now_async(self):
-        root = self._root()
+        root = self._sd_root()
         if not root or not root.is_dir():
             mb.showwarning(APP_NAME, "Сначала выбери корень microSD.", parent=self); return
         backup_text = self.backup_var.get().strip()
@@ -1248,7 +1248,7 @@ class TrimUIApp(ctk.CTk):
             ctk.CTkLabel(info, text=item["detail"], text_color=C["muted"], font=ctk.CTkFont(size=9), wraplength=830, justify="left", anchor="w").pack(anchor="w", pady=(2, 0))
 
     def run_diagnostics(self):
-        root = self._root()
+        root = self._sd_root()
         if not root or not root.is_dir():
             mb.showwarning(APP_NAME, "Выбери корень microSD.", parent=self); return
         def worker(): return inspect_card(root, self.roms_var.get().strip() or "Roms", self.games)
@@ -1419,7 +1419,7 @@ class TrimUIApp(ctk.CTk):
         if not local_art or not local_art.exists():
             mb.showwarning(APP_NAME, "Сначала установи изображение в редакторе, затем передай его на консоль.", parent=dialog); return
         root_remote = self.remote_var.get().rstrip("/")
-        sd_root = self._root()
+        sd_root = self._sd_root()
         romroot = locate_roms(sd_root, self.roms_var.get().strip() or "Roms") if sd_root else None
         if not romroot:
             mb.showwarning(APP_NAME, "Сначала выбери корень microSD и просканируй библиотеку.", parent=dialog); return
